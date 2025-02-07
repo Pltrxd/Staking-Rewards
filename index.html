@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Staking Rewards</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e8f5e9; /* Light green background */
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #2e7d32; /* Dark green for headings */
+      margin-bottom: 20px;
+    }
+    .info {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #555;
+    }
+    .info a {
+      color: #4caf50;
+      text-decoration: none;
+    }
+    .info a:hover {
+      text-decoration: underline;
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+      color: #555;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input:focus {
+      border-color: #4caf50;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #388e3c;
+    }
+    .result {
+      margin-top: 25px;
+      text-align: center;
+      font-size: 18px;
+      color: #2e7d32;
+    }
+    .chart {
+      margin-top: 25px;
+      width: 100%;
+      height: 200px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .rewards-info {
+      margin-top: 20px;
+      text-align: center;
+      color: #555;
+    }
+    .restake-box {
+      margin-top: 30px;
+      padding: 20px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    .restake-box h3 {
+      text-align: center;
+      color: #2e7d32;
+      margin-bottom: 15px;
+    }
+    .footer {
+      margin-top: 30px;
+      text-align: center;
+      color: #555;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="info">
+    <p>Tips are appreciated! ETH: <a href="https://etherscan.io/address/0x8dd21F1ECC582980310D21a2A27d06a849A275a8" target="_blank">0x8dd21F1ECC582980310D21a2A27d06a849A275a8</a></p>
+  </div>
+  <div class="container">
+    <h1>Staking Rewards</h1>
+    <label for="amount">Staked Amount:</label>
+    <input type="number" id="amount" placeholder="Enter amount" min="0">
+    <label for="duration">Staking Duration (days):</label>
+    <input type="number" id="duration" placeholder="Enter duration" min="0">
+    <label for="rate">Annual Reward Rate (%):</label>
+    <input type="number" id="rate" placeholder="Enter annual rate" min="0" value="206">
+    <button onclick="calculate()">Calculate Earnings</button>
+    <div class="result" id="result"></div>
+    <div class="chart" id="chart"></div>
+    <div class="rewards-info" id="rewards-info"></div>
+    <div class="restake-box">
+      <h3>Recommended Restake Frequency</h3>
+      <p>Restake daily for maximum compounding effect.</p>
+      <div class="chart" id="compounding-chart"></div>
+    </div>
+  </div>
+  <div class="footer">
+    &copy; 2024 Staking Rewards. All rights reserved.
+  </div>
+
+  <script>
+    function calculate() {
+      const amount = parseFloat(document.getElementById('amount').value);
+      const duration = parseFloat(document.getElementById('duration').value);
+      const rate = parseFloat(document.getElementById('rate').value);
+
+      if (isNaN(amount) || isNaN(duration) || isNaN(rate) || amount < 0 || duration < 0 || rate < 0) {
+        alert("Please enter valid values.");
+        return;
+      }
+
+      const annualRewardRate = rate / 100; // Convert percentage to decimal
+      const dailyRewardRate = annualRewardRate / 365;
+      const totalReward = amount * dailyRewardRate * duration;
+      const finalAmount = amount + totalReward;
+
+      document.getElementById('result').innerHTML = `
+        Final Amount: <strong>${finalAmount.toFixed(2)}</strong><br>
+        Total Rewards: <strong>${totalReward.toFixed(2)}</strong>
+      `;
+
+      // Rewards breakdown
+      const dailyReward = amount * dailyRewardRate;
+      const weeklyReward = dailyReward * 7;
+      const monthlyReward = dailyReward * 30;
+      const yearlyReward = amount * annualRewardRate;
+
+      document.getElementById('rewards-info').innerHTML = `
+        <strong>Rewards Breakdown:</strong><br>
+        Daily: ${dailyReward.toFixed(2)}<br>
+        Weekly: ${weeklyReward.toFixed(2)}<br>
+        Monthly: ${monthlyReward.toFixed(2)}<br>
+        Yearly: ${yearlyReward.toFixed(2)}
+      `;
+
+      drawChart(amount, duration, dailyRewardRate, 'chart');
+      drawCompoundingChart(amount, duration, dailyRewardRate);
+    }
+
+    function drawChart(amount, duration, dailyRewardRate, chartId) {
+      const chart = document.getElementById(chartId);
+      chart.innerHTML = "";
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 200;
+      chart.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      const data = [];
+      for (let day = 0; day <= duration; day++) {
+        const reward = amount * dailyRewardRate * day;
+        data.push(amount + reward);
+      }
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: duration + 1 }, (_, i) => i),
+          datasets: [{
+            label: 'Total Amount Over Time',
+            data: data,
+            borderColor: '#4caf50',
+            fill: false,
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Days' } },
+            y: { title: { display: true, text: 'Amount' } }
+          }
+        }
+      });
+    }
+
+    function drawCompoundingChart(amount, duration, dailyRewardRate) {
+      const chart = document.getElementById('compounding-chart');
+      chart.innerHTML = "";
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 400;
+      canvas.height = 200;
+      chart.appendChild(canvas);
+
+      const ctx = canvas.getContext('2d');
+      const data = [];
+      let totalAmount = amount;
+      for (let day = 0; day <= duration; day++) {
+        if (day > 0) {
+          totalAmount += totalAmount * dailyRewardRate; // Compounding effect
+        }
+        data.push(totalAmount);
+      }
+
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array.from({ length: duration + 1 }, (_, i) => i),
+          datasets: [{
+            label: 'Compounding Effect Over Time',
+            data: data,
+            borderColor: '#ff9800', // Orange for compounding chart
+            fill: false,
+          }]
+        },
+        options: {
+          scales: {
+            x: { title: { display: true, text: 'Days' } },
+            y: { title: { display: true, text: 'Amount' } }
+          }
+        }
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+</html>
